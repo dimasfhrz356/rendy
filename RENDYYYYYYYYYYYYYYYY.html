@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vocabulary Quiz — Kuis Kosakata</title>
+  <style>
+    :root{--bg:#f7fafc;--card:#ffffff;--primary:#2563eb}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;background:var(--bg);color:#111}
+    .wrap{max-width:760px;margin:32px auto;padding:20px}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,0.06);padding:22px}
+    h1{font-size:20px;margin:0 0 12px}
+    .progress{height:8px;background:#e6eefc;border-radius:8px;overflow:hidden;margin:12px 0}
+    .bar{height:100%;background:linear-gradient(90deg,var(--primary),#7c3aed);width:0%}
+    .question-area{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+    @media(max-width:700px){.question-area{grid-template-columns:1fr}}
+    .img-wrap{background:#f3f4f6;border-radius:10px;padding:8px;text-align:center}
+    .img-wrap img{max-width:100%;height:220px;object-fit:cover;border-radius:8px}
+    .choices{display:flex;flex-direction:column;gap:10px}
+    .choice{padding:10px 12px;border-radius:10px;border:1px solid #e6e9ef;cursor:pointer;user-select:none}
+    .choice:hover{box-shadow:0 4px 12px rgba(16,24,40,0.04)}
+    .choice.selected{border-color:var(--primary);background:rgba(37,99,235,0.06)}
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+    button{background:var(--primary);color:white;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
+    button.secondary{background:transparent;color:var(--primary);border:1px solid rgba(37,99,235,0.12)}
+    .result{text-align:center;padding:18px}
+    .score{font-size:28px;font-weight:700;margin:8px 0}
+    small.hint{display:block;margin-top:6px;color:#475569}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="quiz-card">
+      <h1>Vocabulary Quiz — Tebak Kata dari Gambar</h1>
+      <p style="margin:0;color:#334155">Pilih jawaban yang benar. Setelah selesai, kamu akan mendapatkan skor.</p>
+      <div class="progress" aria-hidden="true"><div class="bar" id="progress-bar"></div></div>
+
+      <div id="quiz">
+        <!-- Question area rendered by JS -->
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+        <button id="nextBtn">Next</button>
+        <button id="restartBtn" class="secondary" style="display:none">Ulangi</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const questions = [
+  {id:1,img:'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=1200&q=60',answers:['Apple','Banana','Orange','Grapes'],correct:0},
+  {id:2,img:'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=1200&q=60',answers:['Dog','Cat','Rabbit','Horse'],correct:1},
+  {id:3,img:'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1200&q=60',answers:['Car','Table','Sofa','Bed'],correct:0},
+  {id:4,img:'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=60',answers:['Night','Afternoon','Sunset','Morning'],correct:2},
+  {id:5,img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&q=60',answers:['Night','Morning','Afternoon','Noon'],correct:0},
+  {id:6,img:'https://images.unsplash.com/photo-1501973801540-537f08ccae7b?w=1200&q=60',answers:['Leaves','Fruit','Log','Saplings'],correct:0},
+  {id:7,img:'https://images.unsplash.com/photo-1481349518771-20055b2a7b24?w=1200&q=60',answers:['Banana','Apple','Grape','Orange'],correct:0},
+  {id:8,img:'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=1200&q=60',answers:['Balloon','Toy','Gun','Gift'],correct:0},
+  {id:9,img:'https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=1200&q=60',answers:['Steak','Egg','Noodle','Salad'],correct:0},
+  {id:10,img:'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=1200&q=60',answers:['Camera','Phone','Radio','Laptop'],correct:0},
+  {id:11,img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ52QWqPHD7txLCp_SMskjUS7otrCZH8rCyQQ&s',answers:['Shoes','Backpack','Wallet','Belt'],correct:1},
+  {id:12,img:'https://www.foodandwine.com/thmb/iJw7N_NfcPpd-EB8rpYbzrkSFIM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/tomato-mozzarella-pizza-FT-RECIPE0725-e7244e979c504188a049623668c15b2e.jpg',answers:['Pizza','Burger','Sandwich','Noodles'],correct:0},
+  {id:13,img:'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?w=1200&q=60',answers:['Blackberry','Strawberry','Blueberry','Raspberry'],correct:2},
+  {id:14,img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTgY3CwlNv14iaSJvFlW8_lA2Xx_Bd_BdnzA&s',answers:['Train','Plane','Bus','Ship'],correct:1},
+  {id:15,img:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtDZ3-Yw3bgKq-QSpxuvlERsUfa77gz2JJcw&s',answers:['Tree','Flower','Grass','Leaf'],correct:1}
+];
+
+let current=0;let score=0;let selected=null;
+const quizEl=document.getElementById('quiz');
+const nextBtn=document.getElementById('nextBtn');
+const restartBtn=document.getElementById('restartBtn');
+const progressBar=document.getElementById('progress-bar');
+
+function renderQuestion(){
+  const q = questions[current];
+  selected = null;
+  progressBar.style.width = `${Math.round((current)/questions.length*100)}%`;
+  quizEl.innerHTML = `
+    <div class="question-area">
+      <div class="img-wrap" aria-hidden="true">
+        <img src="${q.img}" alt="Gambar soal ${current+1}">
+        <small class="hint">Gambar untuk soal nomor ${current+1}</small>
+      </div>
+      <div>
+        <p style="font-weight:600;margin:0 0 8px">Question ${current+1} of ${questions.length}</p>
+        <div class="choices" id="choices">
+          ${q.answers.map((a,i)=>`<div class="choice" data-index="${i}" role="button" tabindex="0">${a}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // attach handlers
+  document.querySelectorAll('.choice').forEach(el=>{
+    el.addEventListener('click',()=>selectAnswer(el));
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter' || e.key===' ') selectAnswer(el); });
+  });
+
+  nextBtn.textContent = current === questions.length-1 ? 'Selesai' : 'Next';
+}
+
+function selectAnswer(el){
+  document.querySelectorAll('.choice').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selected = Number(el.dataset.index);
+}
+
+nextBtn.addEventListener('click',()=>{
+  if(selected === null){
+    // allow moving forward without answer but warn
+    if(!confirm('Kamu belum memilih jawaban. Lanjutkan tanpa memilih?')) return;
+  }
+  // check answer
+  const q = questions[current];
+  if(selected === q.correct) score++;
+  current++;
+  if(current < questions.length){
+    renderQuestion();
+  } else {
+    showResult();
+  }
+});
+
+restartBtn.addEventListener('click',()=>{
+  current=0;score=0;selected=null;restartBtn.style.display='none';nextBtn.style.display='inline-block';renderQuestion();progressBar.style.width='0%';
+});
+
+function showResult(){
+  progressBar.style.width = `100%`;
+  quizEl.innerHTML = `
+    <div class="result">
+      <h2>Hasil Kamu</h2>
+      <div class="score">${score} / ${questions.length}</div>
+      <p>${feedbackMessage(score)}</p>
+      <div style="margin-top:12px;text-align:center">
+        <button id="reviewBtn" class="secondary">Lihat Jawaban</button>
+        <button id="tryAgain">Ulangi Kuis</button>
+      </div>
+    </div>
+  `;
+  nextBtn.style.display='none';
+  restartBtn.style.display='inline-block';
+
+  document.getElementById('tryAgain').addEventListener('click',()=>{
+    current=0;score=0;selected=null;restartBtn.style.display='none';nextBtn.style.display='inline-block';renderQuestion();progressBar.style.width='0%';
+  });
+
+  document.getElementById('reviewBtn').addEventListener('click',reviewAnswers);
+}
+
+function feedbackMessage(s){
+  const pct = Math.round((s/questions.length)*100);
+  if(pct===100) return 'Hebat! Kamu menjawab semua dengan benar.';
+  if(pct>=70) return 'Bagus! Hanya beberapa yang salah.';
+  if(pct>=40) return 'Cukup. Coba lagi untuk memperbaiki.';
+  return 'Terus latihan ya — kamu pasti bisa!';
+}
+
+function reviewAnswers(){
+  // render all questions with correct/wrong markers
+  quizEl.innerHTML = `
+    <div>
+      <h3>Review Jawaban</h3>
+      <div id="reviewList"></div>
+    </div>
+  `;
+  const container = document.getElementById('reviewList');
+  questions.forEach((q,idx)=>{
+    const userGot = idx < current ? null : null; // we tracked only score, not per-question selected — so highlight correct answers only
+    const block = document.createElement('div');
+    block.style.display='flex';block.style.gap='12px';block.style.alignItems='center';block.style.padding='10px 0';block.style.borderTop='1px solid #f1f5f9';
+    block.innerHTML = `
+      <div style="width:120px"><img src="${q.img}" alt="img${idx+1}" style="width:120px;height:70px;object-fit:cover;border-radius:6px"></div>
+      <div>
+        <div style="font-weight:600">Question ${idx+1}</div>
+        <div>Jawaban benar: <strong>${q.answers[q.correct]}</strong></div>
+      </div>
+    `;
+    container.appendChild(block);
+  });
+  nextBtn.style.display='none';
+  restartBtn.style.display='inline-block';
+}
+
+// initial render
+renderQuestion();
+</script>
+</body>
+</html>
